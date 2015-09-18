@@ -5,10 +5,10 @@ print 'SET a 10'
 print 'SET b 20'
 print 'SET c 30'
 print 'BEGIN'
-choices = ['SET ', 'GET ', 'UNSET ' 'SET ', 'SET ']
+choices = ['SET ']#, 'GET ', 'UNSET ' 'SET ', 'SET ']
 letter = ['a ', 'b ', 'c ']
 number = ['10', '20', '30']
-for i in xrange(100000):
+for i in xrange(1000000):
     if i%100 == 0:
         print 'BEGIN'
     if i%100 == 50:

@@ -26,8 +26,6 @@ class MySimpleDB(object):
         self.db_entries = dict() #hash table containing DB entrie
         self.item_counts = dict() #hash table containing counts of values
         self.sessions = list() #list of current active sessions
-        #used to check x previous session entries for duplicates
-        self.session_offset = 5 
         #list of valid commands the the appropriate methods for them
         self.valid_inputs = {'SET' : self._set,
                             'GET' : self._print_get,
@@ -154,7 +152,7 @@ class MySimpleDB(object):
         '''
 
         def __init__(self, dbObj):
-            self.uncommit_log = list()
+            self.uncommit_dict = dict()
             self.dbObj = dbObj
 
         def parse_command(self, curr_line):
@@ -166,25 +164,14 @@ class MySimpleDB(object):
         def _reverse_set(self, curr_line):
             '''Create a reversal of SET and UNSET'''
             key = curr_line[1]
-            old_value = self.dbObj._get(curr_line) #save old value
-            #create new transaction reversing current transaction
-            #keeping only key and value removing SET to save memory
-            self.uncommit_log.append([key, old_value])
-            #check recent entries to see if any are duplicates
-            #if so pop that last command from list. adjust the [-x:-1]
-            #value to tune it to the inputs.  
-            #comment out next two lines if you do not want to remove duplicates
-            if self.uncommit_log[-1] in self.uncommit_log[-self.dbObj.session_offset:-1]:
-                self.uncommit_log.pop()
+            old_value = self.dbObj._get(curr_line)
+            if key not in self.uncommit_dict:
+                self.uncommit_dict[key] = old_value
 
         def _rollback(self, curr_line):
             '''Roll back changes made during session'''
-            #reverse log to set changes in corret order
-            self.uncommit_log.reverse()
-            key = ["SET"] #add SET back into the transaction
-            for curr_line in self.uncommit_log:
-                #reverse all of the transactions from the current session
-                self.dbObj._set(key + curr_line, False)
+            for key, value in self.uncommit_dict.items():
+                self.dbObj._set(["SET", key, value], False)
 
 
 if __name__ == "__main__":
